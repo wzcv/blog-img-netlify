@@ -14,12 +14,17 @@ exports.handler = async (event, context) => {
   try {
     // Parse the multipart form data
     const { fields, files } = await parseMultipartForm(event);
-    const auth = fields.auth[0];
-    const image = files.image[0];
+    
+    if (!fields.auth || !fields.auth[0]) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ code: 400, message: 'Auth key is required' })
+      };
+    }
 
     // Validate auth key
     try {
-      validateAuth(auth);
+      validateAuth(fields.auth[0]);
     } catch (error) {
       return {
         statusCode: 401,
@@ -28,7 +33,7 @@ exports.handler = async (event, context) => {
     }
 
     // Validate image
-    if (!image) {
+    if (!files.image || !files.image[0]) {
       return {
         statusCode: 400,
         body: JSON.stringify({ 
@@ -38,10 +43,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Read file content
-    const fs = require('fs');
-    const fileContent = fs.readFileSync(image.path);
-    const fileBase64 = fileContent.toString('base64');
+    const image = files.image[0];
+    const imageContent = Buffer.from(image.content, 'binary').toString('base64');
 
     // Get GitHub credentials from environment variables
     const githubToken = process.env.GITHUB_PAT;
@@ -63,7 +66,7 @@ exports.handler = async (event, context) => {
       repo: repoName,
       path: filename,
       message: `Upload ${filename}`,
-      content: fileBase64
+      content: imageContent
     });
 
     // Generate URL using Netlify domain
