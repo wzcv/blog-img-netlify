@@ -8,7 +8,8 @@
   "dependencies": {
     "@octokit/rest": "^20.0.2",
     "multiparty": "^4.2.3",
-    "update-notifier": "^5.1.0"
+    "update-notifier": "^5.1.0",
+    "@netlify/config": "^18.2.3"
   },
   "devDependencies": {
     "netlify-cli": "^12.7.2"
