@@ -1,10 +1,8 @@
 const { Octokit } = require('@octokit/rest');
 const { validateAuth } = require('./utils/auth');
-const { parseMultipartForm, generateFilename } = require('./utils/file');
-const { generateFileUrl, generateDeleteUrl } = require('./utils/url');
 
 exports.handler = async (event, context) => {
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
       body: JSON.stringify({ code: 405, message: 'Method not allowed' })
@@ -12,16 +10,24 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { fields, files } = await parseMultipartForm(event);
-    
-    if (!fields.auth || !fields.auth[0]) {
+    const params = new URLSearchParams(event.rawQuery);
+    const filename = params.get('name');
+    const auth = params.get('auth');
+
+    if (!filename) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ code: 400, message: 'Filename is required' })
+      };
+    }
+
+    if (!auth) {
       return {
         statusCode: 400,
         body: JSON.stringify({ code: 400, message: 'Auth key is required' })
       };
     }
 
-    const auth = fields.auth[0];
     try {
       validateAuth(auth);
     } catch (error) {
@@ -31,17 +37,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    if (!files.image || !files.image[0]) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ code: 400, message: 'Image file is required' })
-      };
-    }
-
-    const image = files.image[0];
-    const imageBuffer = Buffer.from(image.content, 'binary');
-    const imageContent = imageBuffer.toString('base64');
-    
     const githubToken = process.env.GITHUB_PAT;
     const [owner, repoName] = process.env.GITHUB_REPO.split('/');
 
@@ -50,30 +45,45 @@ exports.handler = async (event, context) => {
     }
 
     const octokit = new Octokit({ auth: githubToken });
-    const filename = generateFilename(image.originalFilename);
     
-    await octokit.repos.createOrUpdateFileContents({
+    // 获取文件的当前 SHA
+    const { data: fileData } = await octokit.repos.getContent({
       owner,
       repo: repoName,
-      path: filename,
-      message: `Upload ${filename}`,
-      content: imageContent
+      path: `img/${filename}`
     });
 
-    const fileUrl = generateFileUrl(filename);
-    const deleteUrl = generateDeleteUrl(filename.replace('img/', ''), auth);
+    // 删除文件
+    await octokit.repos.deleteFile({
+      owner,
+      repo: repoName,
+      path: `img/${filename}`,
+      message: `Delete ${filename}`,
+      sha: fileData.sha
+    });
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         code: 200,
-        url: fileUrl,
-        delete_url: deleteUrl
+        message: 'File deleted successfully'
       })
     };
 
   } catch (error) {
     console.error('Error:', error);
+    
+    // 如果文件不存在，返回404
+    if (error.status === 404) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          code: 404,
+          message: 'File not found'
+        })
+      };
+    }
+
     return {
       statusCode: 500,
       body: JSON.stringify({
