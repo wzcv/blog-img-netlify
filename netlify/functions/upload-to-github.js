@@ -61,7 +61,7 @@ exports.handler = async (event, context) => {
     });
 
     const fileUrl = generateFileUrl(filename);
-    const deleteUrl = generateDeleteUrl(filename.replace('img/', ''), auth);
+    const deleteUrl = generateDeleteUrl(event, filename.replace('img/', ''), auth);
 
     return {
       statusCode: 200,
