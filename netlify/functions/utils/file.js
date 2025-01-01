@@ -9,7 +9,13 @@ const parseMultipartFormData = (body, boundary) => {
   // Process each part
   parts.forEach(part => {
     if (part.includes('Content-Disposition: form-data;')) {
-      const [headers, content] = part.split('\r\n\r\n');
+      // Split headers and content, keeping the binary data intact
+      const headerEnd = part.indexOf('\r\n\r\n');
+      if (headerEnd === -1) return;
+
+      const headers = part.slice(0, headerEnd);
+      const content = part.slice(headerEnd + 4);
+      
       const nameMatch = headers.match(/name="([^"]+)"/);
       const filenameMatch = headers.match(/filename="([^"]+)"/);
       
@@ -18,13 +24,13 @@ const parseMultipartFormData = (body, boundary) => {
         if (filenameMatch) {
           // This is a file
           const filename = filenameMatch[1];
-          const fileContent = content.trim();
           if (!result.files[name]) {
             result.files[name] = [];
           }
           result.files[name].push({
             originalFilename: filename,
-            content: fileContent
+            content: content,
+            contentType: headers.match(/Content-Type: ([^\r\n]+)/)?.[1]
           });
         } else {
           // This is a field
@@ -49,7 +55,8 @@ exports.parseMultipartForm = (event) => {
     throw new Error('No multipart boundary found');
   }
 
-  const body = Buffer.from(event.body, 'base64').toString();
+  // Convert base64 to binary while preserving binary data
+  const body = Buffer.from(event.body, 'base64').toString('binary');
   return parseMultipartFormData(body, boundary);
 };
 

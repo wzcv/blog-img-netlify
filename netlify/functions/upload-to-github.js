@@ -38,7 +38,10 @@ exports.handler = async (event, context) => {
     }
 
     const image = files.image[0];
-    const imageContent = Buffer.from(image.content, 'binary').toString('base64');
+    // 直接使用 Buffer.from 处理二进制内容
+    const imageBuffer = Buffer.from(image.content, 'binary');
+    const imageContent = imageBuffer.toString('base64');
+    
     const githubToken = process.env.GITHUB_PAT;
     const [owner, repoName] = process.env.GITHUB_REPO.split('/');
 
