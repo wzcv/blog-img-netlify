@@ -1,9 +1,9 @@
 const { Octokit } = require('@octokit/rest');
 const { validateAuth } = require('./utils/auth');
 const { parseMultipartForm, generateFilename } = require('./utils/file');
+const { generateFileUrl } = require('./utils/url');
 
 exports.handler = async (event, context) => {
-  // Only allow POST method
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -12,7 +12,6 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Parse the multipart form data
     const { fields, files } = await parseMultipartForm(event);
     
     if (!fields.auth || !fields.auth[0]) {
@@ -22,7 +21,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Validate auth key
     try {
       validateAuth(fields.auth[0]);
     } catch (error) {
@@ -32,21 +30,15 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Validate image
     if (!files.image || !files.image[0]) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
-          code: 400, 
-          message: 'Image file is required' 
-        })
+        body: JSON.stringify({ code: 400, message: 'Image file is required' })
       };
     }
 
     const image = files.image[0];
     const imageContent = Buffer.from(image.content, 'binary').toString('base64');
-
-    // Get GitHub credentials from environment variables
     const githubToken = process.env.GITHUB_PAT;
     const [owner, repoName] = process.env.GITHUB_REPO.split('/');
 
@@ -54,13 +46,9 @@ exports.handler = async (event, context) => {
       throw new Error('Missing GitHub configuration');
     }
 
-    // Initialize Octokit
-    const octokit = new Octokit({
-      auth: githubToken
-    });
-
-    // Generate filename and upload
+    const octokit = new Octokit({ auth: githubToken });
     const filename = generateFilename(image.originalFilename);
+    
     await octokit.repos.createOrUpdateFileContents({
       owner,
       repo: repoName,
@@ -69,10 +57,7 @@ exports.handler = async (event, context) => {
       content: imageContent
     });
 
-    // Generate URL using Netlify domain
-    const host = event.headers.host;
-    const protocol = event.headers['x-forwarded-proto'] || 'https';
-    const fileUrl = `${protocol}://${host}/${filename}`;
+    const fileUrl = generateFileUrl(filename);
 
     return {
       statusCode: 200,
