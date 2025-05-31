@@ -1,9 +1,9 @@
-const { Octokit } = (await import('@octokit/rest')).default;
 const { validateAuth } = require('./utils/auth');
 const { parseMultipartForm, generateFilename } = require('./utils/file');
 const { generateFileUrl, generateDeleteUrl } = require('./utils/url');
 
 exports.handler = async (event, context) => {
+  const { Octokit } = (await import('@octokit/rest')).default;
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
