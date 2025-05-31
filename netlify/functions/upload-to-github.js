@@ -1,4 +1,4 @@
-const { Octokit } = require('@octokit/rest');
+const { Octokit } = (await import('@octokit/rest')).default;
 const { validateAuth } = require('./utils/auth');
 const { parseMultipartForm, generateFilename } = require('./utils/file');
 const { generateFileUrl, generateDeleteUrl } = require('./utils/url');

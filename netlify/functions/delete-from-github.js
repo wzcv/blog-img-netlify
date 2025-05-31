@@ -1,4 +1,4 @@
-const { Octokit } = require('@octokit/rest');
+const { Octokit } = (await import('@octokit/rest')).default;
 const { validateAuth } = require('./utils/auth');
 
 exports.handler = async (event, context) => {
