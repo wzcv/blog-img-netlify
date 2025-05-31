@@ -52,10 +52,15 @@
 
 ## 认证
 
-API 使用简单的密钥进行认证。客户端需要在请求中提供正确的 `auth` 参数。
+API 使用简单的密钥进行认证。客户端需要在请求中提供正确的 `auth` 参数。该密钥通过 `AUTH_KEY` 环境变量进行配置。
 
-## GitHub 集成
+## 环境变量
 
-- API 通过 GitHub Personal Access Token (PAT) 与 GitHub 仓库交互。
-- 需要在环境变量中配置 `GITHUB_PAT` 和 `GITHUB_REPO` (格式: `owner/repoName`)。
+项目运行需要以下环境变量：
+
+- `GITHUB_PAT`: 用于访问 GitHub API 的 Personal Access Token。
+- `GITHUB_REPO`: 目标 GitHub 仓库，格式为 `owner/repoName` (例如 `your-username/your-repo`)。
+- `AUTH_KEY`: 用于 API 认证的密钥。
+- `URL_PREFIX`: 生成图片 URL 的前缀 (例如 `https://your-custom-domain.com` 或 Netlify 站点的默认 URL `https://your-site-name.netlify.app`)。
+
 
