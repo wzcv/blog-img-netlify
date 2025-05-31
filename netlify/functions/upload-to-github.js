@@ -3,7 +3,7 @@ const { parseMultipartForm, generateFilename } = require('./utils/file');
 const { generateFileUrl, generateDeleteUrl } = require('./utils/url');
 
 exports.handler = async (event, context) => {
-  const { Octokit } = (await import('@octokit/rest')).default;
+  const { Octokit } = await import('@octokit/rest');
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,

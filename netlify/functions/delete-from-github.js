@@ -1,7 +1,7 @@
 const { validateAuth } = require('./utils/auth');
 
 exports.handler = async (event, context) => {
-  const { Octokit } = (await import('@octokit/rest')).default;
+  const { Octokit } = await import('@octokit/rest');
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
