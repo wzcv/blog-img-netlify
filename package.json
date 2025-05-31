@@ -1,17 +1,15 @@
 {
-  "name": "node-starter",
+  "name": "blog-img-netlify",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "netlify dev"
   },
   "dependencies": {
-    "@octokit/rest": "^20.0.2",
-    "multiparty": "^4.2.3",
-    "update-notifier": "^5.1.0",
-    "@netlify/config": "^18.2.3"
+    "@netlify/config": "^23.0.8",
+    "@octokit/rest": "^22.0.0",
+    "update-notifier": "^7.3.1"
   },
   "devDependencies": {
-    "netlify-cli": "^12.7.2"
+    "netlify-cli": "^21.5.0"
   }
 }
